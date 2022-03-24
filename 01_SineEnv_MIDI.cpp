@@ -128,7 +128,6 @@ public:
   // where the presets and sequences are stored
   SynthGUIManager<SineEnv> synthManager{"SineEnv"};
   RtMidiIn midiIn; // MIDI input carrier
-  MIDIin midi;
 
   // This function is called right after the window is created
   // It provides a grphics context to initialize ParameterGUI

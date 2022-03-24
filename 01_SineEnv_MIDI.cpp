@@ -3,7 +3,7 @@
 // Course Instrument 01. Sine Envelope
 // Myungin Lee
 
-#include <cstdio>  // for printing to stdout
+#include <cstdio> // for printing to stdout
 #include <stdio.h>
 
 #include "Gamma/Analysis.h"
@@ -18,7 +18,6 @@
 #include "al/ui/al_ControlGUI.hpp"
 #include "al/ui/al_Parameter.hpp"
 #include "al/io/al_MIDI.hpp"
-#include "include/midiIn.cpp"
 
 // using namespace gam;
 using namespace al;
@@ -28,8 +27,9 @@ using namespace al;
 // define the synth's voice parameters and the sound and graphic generation
 // processes in the onProcess() functions.
 
-class SineEnv : public SynthVoice {
- public:
+class SineEnv : public SynthVoice
+{
+public:
   // Unit generators
   gam::Pan<> mPan;
   gam::Sine<> mOsc;
@@ -39,14 +39,14 @@ class SineEnv : public SynthVoice {
 
   // Additional members
   Mesh mMesh;
-  MIDI midi;
   // Initialize voice. This function will only be called once per voice when
   // it is created. Voices will be reused if they are idle.
-  void init() override {
+  void init() override
+  {
     // Intialize envelope
-    mAmpEnv.curve(0);  // make segments lines
+    mAmpEnv.curve(0); // make segments lines
     mAmpEnv.levels(0, 1, 1, 0);
-    mAmpEnv.sustainPoint(2);  // Make point 2 sustain until a release is issued
+    mAmpEnv.sustainPoint(2); // Make point 2 sustain until a release is issued
 
     // We have the mesh be a sphere
     addDisc(mMesh, 1.0, 30);
@@ -64,11 +64,11 @@ class SineEnv : public SynthVoice {
     createInternalTriggerParameter("pan", 0.0, -1.0, 1.0);
 
     // Initalize MIDI device input
-    midi.midiInit();
   }
 
   // The audio processing function
-  void onProcess(AudioIOData& io) override {
+  void onProcess(AudioIOData &io) override
+  {
     // Get the values from the parameters and apply them to the corresponding
     // unit generators. You could place these lines in the onTrigger() function,
     // but placing them here allows for realtime prototyping on a running
@@ -79,7 +79,8 @@ class SineEnv : public SynthVoice {
     mAmpEnv.lengths()[0] = getInternalParameterValue("attackTime");
     mAmpEnv.lengths()[2] = getInternalParameterValue("releaseTime");
     mPan.pos(getInternalParameterValue("pan"));
-    while (io()) {
+    while (io())
+    {
       float s1 = mOsc() * mAmpEnv() * getInternalParameterValue("amplitude");
       float s2;
       mEnvFollow(s1);
@@ -90,11 +91,13 @@ class SineEnv : public SynthVoice {
     // We need to let the synth know that this voice is done
     // by calling the free(). This takes the voice out of the
     // rendering chain
-    if (mAmpEnv.done() && (mEnvFollow.value() < 0.001f)) free();
+    if (mAmpEnv.done() && (mEnvFollow.value() < 0.001f))
+      free();
   }
 
   // The graphics processing function
-  void onProcess(Graphics& g) override {
+  void onProcess(Graphics &g) override
+  {
     // Get the paramter values on every video frame, to apply changes to the
     // current instance
     float frequency = getInternalParameterValue("frequency");
@@ -117,22 +120,24 @@ class SineEnv : public SynthVoice {
 };
 
 // We make an app.
-class MyApp : public App {
- public:
+class MyApp : public App, public MIDIMessageHandler
+{
+public:
   // GUI manager for SineEnv voices
   // The name provided determines the name of the directory
   // where the presets and sequences are stored
   SynthGUIManager<SineEnv> synthManager{"SineEnv"};
-  // RtMidiIn midiIn; // MIDI input carrier
-  MIDI midi;
+  RtMidiIn midiIn; // MIDI input carrier
+  MIDIin midi;
 
   // This function is called right after the window is created
   // It provides a grphics context to initialize ParameterGUI
   // It's also a good place to put things that should
   // happen once at startup.
-  void onCreate() override {
-    navControl().active(false);  // Disable navigation via keyboard, since we
-                                 // will be using keyboard for note triggering
+  void onCreate() override
+  {
+    navControl().active(false); // Disable navigation via keyboard, since we
+                                // will be using keyboard for note triggering
 
     // Set sampling rate for Gamma objects from app's audio
     gam::sampleRate(audioIO().framesPerSecond());
@@ -144,12 +149,30 @@ class MyApp : public App {
     synthManager.synthRecorder().verbose(true);
   }
 
+  void inInit()
+  {
+    // Check for connected MIDI devices
+    if (midiIn.getPortCount() > 0) {
+      // Bind ourself to the RtMidiIn object, to have the onMidiMessage()
+      // callback called whenever a MIDI message is received
+      MIDIMessageHandler::bindTo(midiIn);
+
+      // Open the last device found
+      unsigned int port = midiIn.getPortCount() - 1;
+      midiIn.openPort(port);
+      printf("Opened port to %s\n", midiIn.getPortName(port).c_str());
+    } else {
+      printf("Error: No MIDI devices found.\n");
+    }
+  }
   // The audio callback function. Called when audio hardware requires data
-  void onSound(AudioIOData& io) override {
-    synthManager.render(io);  // Render audio
+  void onSound(AudioIOData &io) override
+  {
+    synthManager.render(io); // Render audio
   }
 
-  void onAnimate(double dt) override {
+  void onAnimate(double dt) override
+  {
     // The GUI is prepared here
     imguiBeginFrame();
     // Draw a window that contains the synth control panel
@@ -158,7 +181,8 @@ class MyApp : public App {
   }
 
   // The graphics callback function.
-  void onDraw(Graphics& g) override {
+  void onDraw(Graphics &g) override
+  {
     g.clear();
     // Render the synth's graphics
     synthManager.render(g);
@@ -168,39 +192,50 @@ class MyApp : public App {
   }
 
   // This gets called whenever a MIDI message is received on the port
-  void onMIDIMessage(const MIDIMessage &m){
-      case MIDIByte::NOTE_ON:
+  void onMIDIMessage(const MIDIMessage &m)
+  {
+    switch (m.type())
+    {
+      case MIDIByte::NOTE_ON:{
         int midiNote = m.noteNumber();
         if (midiNote > 0) {
           synthManager.voice()->setInternalParameterValue(
               "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
           synthManager.voice()->setInternalParameterValue(
-              "attackTime", midi.m.velocity());
+              "attackTime", m.velocity());
           synthManager.triggerOn(midiNote);
         }
         break;
-
-      case MIDIByte::NOTE_OFF:
+      }
+      case MIDIByte::NOTE_OFF:{
         int midiNote = m.noteNumber();
         if (midiNote > 0) {
           synthManager.triggerOff(midiNote);
         }
         break;
+      }
+    }
   }
   // Whenever a key is pressed, this function is called
-  bool onKeyDown(Keyboard const& k) override {
-    if (ParameterGUI::usingKeyboard()) {  // Ignore keys if GUI is using
-                                          // keyboard
+  bool onKeyDown(Keyboard const &k) override
+  {
+    if (ParameterGUI::usingKeyboard())
+    { // Ignore keys if GUI is using
+      // keyboard
       return true;
     }
-    if (k.shift()) {
+    if (k.shift())
+    {
       // If shift pressed then keyboard sets preset
       int presetNumber = asciiToIndex(k.key());
       synthManager.recallPreset(presetNumber);
-    }else{
+    }
+    else
+    {
       // Otherwise trigger note for polyphonic synth
       int midiNote = asciiToMIDI(k.key());
-      if (midiNote > 0) {
+      if (midiNote > 0)
+      {
         synthManager.voice()->setInternalParameterValue(
             "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
         synthManager.triggerOn(midiNote);
@@ -211,9 +246,11 @@ class MyApp : public App {
   }
 
   // Whenever a key is released this function is called
-  bool onKeyUp(Keyboard const& k) override {
+  bool onKeyUp(Keyboard const &k) override
+  {
     int midiNote = asciiToMIDI(k.key());
-    if (midiNote > 0) {
+    if (midiNote > 0)
+    {
       synthManager.triggerOff(midiNote);
     }
     return true;
@@ -222,13 +259,13 @@ class MyApp : public App {
   void onExit() override { imguiShutdown(); }
 };
 
-int main() {
+int main()
+{
   // Create app instance
   MyApp app;
 
   // Set up audio
   app.configureAudio(48000., 512, 2, 0);
-
   app.start();
   return 0;
 }

@@ -1,4 +1,9 @@
-﻿#include <cstdio>  // for printing to stdout
+﻿// MUS109IA & MAT276IA.
+// Spring 2022
+// Course Instrument 01. Sine Envelope
+// Myungin Lee
+
+#include <cstdio>  // for printing to stdout
 #include <stdio.h>
 
 #include "Gamma/Analysis.h"
@@ -109,7 +114,6 @@ class SineEnv : public SynthVoice {
   void onTriggerOn() override { mAmpEnv.reset(); }
 
   void onTriggerOff() override { mAmpEnv.release(); }
-  void onMIDIMessage(const MIDIMessage &m);
 };
 
 // We make an app.
@@ -119,7 +123,8 @@ class MyApp : public App {
   // The name provided determines the name of the directory
   // where the presets and sequences are stored
   SynthGUIManager<SineEnv> synthManager{"SineEnv"};
-  RtMidiIn midiIn; // MIDI input carrier
+  // RtMidiIn midiIn; // MIDI input carrier
+  MIDI midi;
 
   // This function is called right after the window is created
   // It provides a grphics context to initialize ParameterGUI
@@ -161,6 +166,27 @@ class MyApp : public App {
     // GUI is drawn here
     imguiDraw();
   }
+
+  // This gets called whenever a MIDI message is received on the port
+  void onMIDIMessage(const MIDIMessage &m){
+      case MIDIByte::NOTE_ON:
+        int midiNote = m.noteNumber();
+        if (midiNote > 0) {
+          synthManager.voice()->setInternalParameterValue(
+              "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
+          synthManager.voice()->setInternalParameterValue(
+              "attackTime", midi.m.velocity());
+          synthManager.triggerOn(midiNote);
+        }
+        break;
+
+      case MIDIByte::NOTE_OFF:
+        int midiNote = m.noteNumber();
+        if (midiNote > 0) {
+          synthManager.triggerOff(midiNote);
+        }
+        break;
+  }
   // Whenever a key is pressed, this function is called
   bool onKeyDown(Keyboard const& k) override {
     if (ParameterGUI::usingKeyboard()) {  // Ignore keys if GUI is using
@@ -171,7 +197,7 @@ class MyApp : public App {
       // If shift pressed then keyboard sets preset
       int presetNumber = asciiToIndex(k.key());
       synthManager.recallPreset(presetNumber);
-    } else {
+    }else{
       // Otherwise trigger note for polyphonic synth
       int midiNote = asciiToMIDI(k.key());
       if (midiNote > 0) {
@@ -180,6 +206,7 @@ class MyApp : public App {
         synthManager.triggerOn(midiNote);
       }
     }
+
     return true;
   }
 

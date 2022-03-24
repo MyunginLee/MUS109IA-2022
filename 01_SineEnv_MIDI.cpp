@@ -148,9 +148,11 @@ public:
     synthManager.synthRecorder().verbose(true);
   }
 
-  void onInit() {
+  void onInit()
+  {
     // Check for connected MIDI devices
-    if (midiIn.getPortCount() > 0) {
+    if (midiIn.getPortCount() > 0)
+    {
       // Bind ourself to the RtMidiIn object, to have the onMidiMessage()
       // callback called whenever a MIDI message is received
       MIDIMessageHandler::bindTo(midiIn);
@@ -159,7 +161,9 @@ public:
       unsigned int port = midiIn.getPortCount() - 1;
       midiIn.openPort(port);
       printf("Opened port to %s\n", midiIn.getPortName(port).c_str());
-    } else {
+    }
+    else
+    {
       printf("Error: No MIDI devices found.\n");
     }
   }
@@ -194,24 +198,24 @@ public:
   {
     switch (m.type())
     {
-      case MIDIByte::NOTE_ON:{
-        int midiNote = m.noteNumber();
-        if (midiNote > 0) {
-          synthManager.voice()->setInternalParameterValue(
-              "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
-          synthManager.voice()->setInternalParameterValue(
-              "attackTime", m.velocity());
-          synthManager.triggerOn(midiNote);
-          printf("On Note %u, Vel %f", m.noteNumber(), m.velocity());
-        }
-        break;
+    case MIDIByte::NOTE_ON:
+    {
+      int midiNote = m.noteNumber();
+      if (midiNote > 0 && m.velocity() > 0.001)
+      {
+        synthManager.voice()->setInternalParameterValue(
+            "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
+        synthManager.voice()->setInternalParameterValue(
+            "attackTime", m.velocity());
+        synthManager.triggerOn(midiNote);
+        printf("On Note %u, Vel %f", m.noteNumber(), m.velocity());
       }
-      case MIDIByte::NOTE_OFF:{
-        int midiNote = m.noteNumber();
+      else {
         synthManager.triggerOff(midiNote);
         printf("Off Note %u, Vel %f", m.noteNumber(), m.velocity());
-        break;
       }
+      break;
+    }
     }
   }
   // Whenever a key is pressed, this function is called

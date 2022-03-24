@@ -148,8 +148,7 @@ public:
     synthManager.synthRecorder().verbose(true);
   }
 
-  void inInit()
-  {
+  void onInit() {
     // Check for connected MIDI devices
     if (midiIn.getPortCount() > 0) {
       // Bind ourself to the RtMidiIn object, to have the onMidiMessage()
@@ -203,14 +202,14 @@ public:
           synthManager.voice()->setInternalParameterValue(
               "attackTime", m.velocity());
           synthManager.triggerOn(midiNote);
+          printf("On Note %u, Vel %f", m.noteNumber(), m.velocity());
         }
         break;
       }
       case MIDIByte::NOTE_OFF:{
         int midiNote = m.noteNumber();
-        if (midiNote > 0) {
-          synthManager.triggerOff(midiNote);
-        }
+        synthManager.triggerOff(midiNote);
+        printf("Off Note %u, Vel %f", m.noteNumber(), m.velocity());
         break;
       }
     }

@@ -29,56 +29,56 @@ public:
         }
     }
     // This gets called whenever a MIDI message is received on the port
-    void onMIDIMessage(const MIDIMessage &m)
-    {
-        printf("%s: ", MIDIByte::messageTypeString(m.status()));
+    // void onMIDIMessage(const MIDIMessage &m)
+    // {
+    //     printf("%s: ", MIDIByte::messageTypeString(m.status()));
 
-        // Here we demonstrate how to parse common channel messages
-        switch (m.type())
-        {
-        case MIDIByte::NOTE_ON:
-            printf("Note %u, Vel %f", m.noteNumber(), m.velocity());
-            break;
+    //     // Here we demonstrate how to parse common channel messages
+    //     switch (m.type())
+    //     {
+    //     case MIDIByte::NOTE_ON:
+    //         printf("Note %u, Vel %f", m.noteNumber(), m.velocity());
+    //         break;
 
-        case MIDIByte::NOTE_OFF:
-            printf("Note %u, Vel %f", m.noteNumber(), m.velocity());
-            break;
+    //     case MIDIByte::NOTE_OFF:
+    //         printf("Note %u, Vel %f", m.noteNumber(), m.velocity());
+    //         break;
 
-        case MIDIByte::PITCH_BEND:
-            printf("Value %f", m.pitchBend());
-            break;
+    //     case MIDIByte::PITCH_BEND:
+    //         printf("Value %f", m.pitchBend());
+    //         break;
 
-        // Control messages need to be parsed again...
-        case MIDIByte::CONTROL_CHANGE:
-            printf("%s ", MIDIByte::controlNumberString(m.controlNumber()));
-            switch (m.controlNumber())
-            {
-            case MIDIByte::MODULATION:
-                printf("%f", m.controlValue());
-                break;
+    //     // Control messages need to be parsed again...
+    //     case MIDIByte::CONTROL_CHANGE:
+    //         printf("%s ", MIDIByte::controlNumberString(m.controlNumber()));
+    //         switch (m.controlNumber())
+    //         {
+    //         case MIDIByte::MODULATION:
+    //             printf("%f", m.controlValue());
+    //             break;
 
-            case MIDIByte::EXPRESSION:
-                printf("%f", m.controlValue());
-                break;
-            }
-            break;
-        default:;
-        }
+    //         case MIDIByte::EXPRESSION:
+    //             printf("%f", m.controlValue());
+    //             break;
+    //         }
+    //         break;
+    //     default:;
+    //     }
 
-        // If it's a channel message, print out channel number
-        if (m.isChannelMessage())
-        {
-            printf(" (MIDI chan %u)", m.channel() + 1);
-        }
+    //     // If it's a channel message, print out channel number
+    //     if (m.isChannelMessage())
+    //     {
+    //         printf(" (MIDI chan %u)", m.channel() + 1);
+    //     }
 
-        printf("\n");
+    //     printf("\n");
 
-        // Print the raw byte values and time stamp
-        printf("\tBytes = ");
-        for (unsigned i = 0; i < 3; ++i)
-        {
-            printf("%3u ", (int)m.bytes[i]);
-        }
-        printf(", time = %g\n", m.timeStamp());
-    }
+    //     // Print the raw byte values and time stamp
+    //     printf("\tBytes = ");
+    //     for (unsigned i = 0; i < 3; ++i)
+    //     {
+    //         printf("%3u ", (int)m.bytes[i]);
+    //     }
+    //     printf(", time = %g\n", m.timeStamp());
+    // }
 };

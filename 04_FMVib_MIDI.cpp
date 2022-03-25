@@ -39,7 +39,6 @@ class FM : public SynthVoice {
   float mVibDepth;
   float mVibRise;
 
-
   void init() override {
     //      mAmpEnv.curve(0); // linear segments
     mAmpEnv.levels(0, 1, 1, 0);
@@ -171,7 +170,7 @@ class MyApp : public App, public MIDIMessageHandler {
  public:
   SynthGUIManager<FM> synthManager{"synth4Vib"};
   RtMidiIn midiIn; // MIDI input carrier
-
+  bool showGUI = true;
   //    ParameterMIDI parameterMIDI;
   int midiNote;
 
@@ -204,7 +203,7 @@ class MyApp : public App, public MIDIMessageHandler {
     // Play example sequence. Comment this line to start from scratch
     //    synthManager.synthSequencer().playSequence("synth2.synthSequence");
     synthManager.synthRecorder().verbose(true);
-    nav().pos(0, 0, 5);  
+    nav().pos(3, 0, 17);  
   }
 
   void onSound(AudioIOData& io) override {
@@ -221,7 +220,9 @@ class MyApp : public App, public MIDIMessageHandler {
     g.clear();
     synthManager.render(g);
     // Draw GUI
-    imguiDraw();
+    if (showGUI){
+      imguiDraw();
+    }
   }
   void onMIDIMessage(const MIDIMessage &m)
   {
@@ -262,6 +263,12 @@ class MyApp : public App, public MIDIMessageHandler {
             "freq", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
         synthManager.triggerOn(midiNote);
       }
+    }
+    switch (k.key())
+    {
+    case ']':
+      showGUI = !showGUI;
+      break;
     }
     return true;
   }

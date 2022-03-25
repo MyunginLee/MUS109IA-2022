@@ -17,6 +17,7 @@
 // using namespace gam;
 using namespace al;
 using namespace std;
+float tclock = 0;
 
 class FM : public SynthVoice {
  public:
@@ -30,6 +31,7 @@ class FM : public SynthVoice {
   gam::Sine<> car, mod, mVib;  // carrier, modulator sine oscillators
   double a = 0;
   double b = 0;
+  double timepose = 10;
   Mesh ball;
 
   // Additional members
@@ -98,29 +100,23 @@ class FM : public SynthVoice {
   void onProcess(Graphics& g) override {
     a += 0.29;
     b += 0.23;
+    timepose -= 0.06;
     g.pushMatrix();
     g.depthTesting(true);
     g.lighting(true);
-    g.translate(getInternalParameterValue("freq") / 200 - 2,
-                (getInternalParameterValue("idx3") +
-                 getInternalParameterValue("idx2")) /
-                        15 -
-                    1,
-                -4);
-    g.rotate(a, Vec3f(0, 1, 0));
-    g.rotate(b, Vec3f(1));
-    float scaling = getInternalParameterValue("amplitude") / 10;
-    g.scale(scaling + getInternalParameterValue("modMul") / 20, scaling + getInternalParameterValue("carMul") / 20 , scaling + mEnvFollow.value() * 10);
-    g.color(HSV(getInternalParameterValue("modMul") / 20, getInternalParameterValue("carMul") / 20 ,
-                0.8));
+    g.translate( timepose, getInternalParameterValue("freq") / 200 - 3 , -4);
+    g.rotate(mVib() + a, Vec3f(0, 1, 0));
+    g.rotate(mVibDepth + b, Vec3f(1));
+    float scaling = getInternalParameterValue("amplitude") / 10 ;
+    g.scale(scaling + getInternalParameterValue("modMul") / 10, scaling + getInternalParameterValue("carMul") / 30 , scaling + mEnvFollow.value() * 5);
+    g.color(HSV(getInternalParameterValue("modMul") / 20, getInternalParameterValue("carMul") / 20, 0.5 + getInternalParameterValue("attackTime")));
     g.draw(ball);
     g.popMatrix();
 
   }
 
-
-
   void onTriggerOn() override {
+    timepose = 10;
     updateFromParameters();
 
     float modFreq =
@@ -175,7 +171,8 @@ class MyApp : public App, public MIDIMessageHandler {
   int midiNote;
   float mVibFrq;
   float mVibDepth;
-  
+  float tscale = 1;
+
   void onInit() override {
     imguiInit();
 
@@ -210,6 +207,7 @@ class MyApp : public App, public MIDIMessageHandler {
   }
 
   void onAnimate(double dt) override {
+    tclock += dt * tscale;
     imguiBeginFrame();
     synthManager.drawSynthControlPanel();
     imguiEndFrame();
@@ -268,6 +266,12 @@ class MyApp : public App, public MIDIMessageHandler {
     case ']':
       showGUI = !showGUI;
       break;
+    case '-':
+      tscale -= 0.1;
+      break;
+    case '+':
+      tscale += 0.1;
+    break;
     }
     return true;
   }

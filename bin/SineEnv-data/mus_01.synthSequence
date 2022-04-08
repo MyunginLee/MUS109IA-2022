@@ -1,0 +1,14 @@
+@ 0 0.100124 SineEnv 0.3 256.869 1 3 0 
+@ 0.416793 0.0834702 SineEnv 0.3 256.869 1 3 0 
+@ 0.683549 0.0837698 SineEnv 0.3 384.868 1 3 0 
+@ 1.06741 0.0998004 SineEnv 0.3 384.868 1 3 0 
+@ 1.31737 0.116759 SineEnv 0.3 256.869 1 3 0 
+@ 1.73398 0.150332 SineEnv 0.3 256.869 1 3 0 
+@ 1.93428 0.150018 SineEnv 0.3 384.868 1 3 0 
+@ 2.43428 0.116702 SineEnv 0.3 256.869 1 3 0 
+@ 2.65132 0.116431 SineEnv 0.3 256.869 1 3 0 
+@ 3.03464 0.116799 SineEnv 0.3 256.869 1 3 0 
+@ 3.18479 0.116727 SineEnv 0.3 384.868 1 3 0 
+@ 3.51782 0.0834517 SineEnv 0.3 384.868 1 3 0 
+# SineEnv amplitude frequency attackTime releaseTime pan 
+#  amplitude frequency attackTime releaseTime pan 

@@ -3,6 +3,7 @@
 // Course Instrument 02. OscEnv (Mesh & Spectrum)
 // This example shows how to form the waveform and visualize through the spectrum
 // Press '[' or ']' to turn on & off GUI 
+// Press '=' to use navigate using keyboard instead of using as a MIDI 
 // Able to play with MIDI device
 // Myungin Lee
 
@@ -317,6 +318,7 @@ class MyApp : public App, public MIDIMessageHandler {
   }
 
   void onAnimate(double dt) override {
+    navControl().active(navi);  // Disable navigation via keyboard, since we
     // Draw GUI
     imguiBeginFrame();
     synthManager.drawSynthControlPanel();

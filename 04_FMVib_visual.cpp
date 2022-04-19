@@ -216,8 +216,7 @@ class MyApp : public App, public MIDIMessageHandler {
   }
 
   void onSound(AudioIOData& io) override {
-    synthManager.render(io);  // Render audio
-    // STFT
+    synthManager.render(io);  // Render audiomVib
     while (io())
     {
       if (stft(io.out(0)))
@@ -276,7 +275,7 @@ class MyApp : public App, public MIDIMessageHandler {
         synthManager.voice()->setInternalParameterValue(
             "freq", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
         synthManager.voice()->setInternalParameterValue(
-            "attackTime", m.velocity());
+            "attackTime", 0.01/m.velocity());
         synthManager.triggerOn(midiNote);
       }
       else
@@ -285,7 +284,15 @@ class MyApp : public App, public MIDIMessageHandler {
       }
       break;
     }
+    case MIDIByte::NOTE_OFF:
+    {
+      int midiNote = m.noteNumber();
+      printf("Note OFF %u, Vel %f", m.noteNumber(), m.velocity());
+      synthManager.triggerOff(midiNote);
+      break;
     }
+    default:;    
+    }    
   }
   bool onKeyDown(Keyboard const& k) override {
     if (ParameterGUI::usingKeyboard()) {  // Ignore keys if GUI is using them

@@ -26,11 +26,12 @@
 using namespace al;
 using namespace std;
 #define FFT_SIZE 4048
-float OSCcarMul;
-float OSCmodMul;
-float OSCvibRate;
-float OSCvibDepth;
-class FM : public SynthVoice
+float OSCcarMul, OSCmodMul, OSCvibRate, OSCvibDepth, OSCtable;
+// tables for oscillator
+gam::ArrayPow2<float> tbSaw(2048), tbSqr(2048), tbImp(2048), tbSin(2048),
+    tbPls(2048), tb__1(2048), tb__2(2048), tb__3(2048), tb__4(2048);
+
+class FMWT : public SynthVoice
 {
 public:
   // Unit generators
@@ -39,17 +40,20 @@ public:
   gam::ADSR<> mModEnv;
   gam::EnvFollow<> mEnvFollow;
   gam::ADSR<> mVibEnv;
-  gam::Sine<> car, mod, mVib; // carrier, modulator sine oscillators
+
+  gam::Sine<> mod, mVib; // carrier, modulator sine oscillators
+  gam::Osc<> car;
   double a = 0;
   double b = 0;
   double timepose = 10;
-  Mesh ball;
   // Additional members
-  float mDur;
-  float mModAmt = 50;
   float mVibFrq;
   float mVibDepth;
   float mVibRise;
+  static const int numb_waveform = 9;
+  Mesh mMesh[numb_waveform];
+  bool wireframe = false;
+  bool vertexLight = true;
   float osc_carmul_inuse;
   float osc_modmul_inuse;
   
@@ -59,14 +63,10 @@ public:
     mAmpEnv.levels(0, 1, 1, 0);
     mModEnv.levels(0, 1, 1, 0);
     mVibEnv.levels(0, 1, 1, 0);
-    //      mVibEnv.curve(0);
-    addSphere(ball, 1, 100, 100);
-    ball.decompress();
-    ball.generateNormals();
 
     // We have the mesh be a sphere
     createInternalTriggerParameter("freq", 440, 10, 4000.0);
-    createInternalTriggerParameter("amplitude", 0.5, 0.0, 1.0);
+    createInternalTriggerParameter("amplitude", 0.1, 0.0, 1.0);
     createInternalTriggerParameter("attackTime", 0.1, 0.01, 3.0);
     createInternalTriggerParameter("releaseTime", 0.1, 0.1, 10.0);
     createInternalTriggerParameter("sustain", 0.75, 0.1, 1.0);
@@ -85,25 +85,100 @@ public:
     createInternalTriggerParameter("vibDepth", 0, 0.0, 10.0);
 
     createInternalTriggerParameter("pan", 0.0, -1.0, 1.0);
+    createInternalTriggerParameter("table", 0, 0, 8);
+
+    // Table & Visual meshes
+    // Now We have the mesh according to the waveform
+    gam::addSinesPow<1>(tbSaw, 9, 1);
+    addCone(mMesh[0],1, Vec3f(0,0,5), 40, 1); //tbSaw
+
+    gam::addSinesPow<1>(tbSqr, 9, 2);
+    addCube(mMesh[1]);  // tbSquare
+
+    gam::addSinesPow<0>(tbImp, 9, 1);
+    addPrism(mMesh[2],1,1,1,100); // tbImp
+
+    gam::addSine(tbSin);
+    addSphere(mMesh[3], 0.3, 16, 100); // tbSin
+
+// About: addSines (dst, amps, cycs, numh)
+// \param[out] dst		destination array
+// \param[in] amps		harmonic amplitudes of series, size must be numh - A[]
+// \param[in] cycs		harmonic numbers of series, size must be numh - C[]
+// \param[in] numh		total number of harmonics
+    float scaler = 0.15;
+    float hscaler = 1;
+
+    { //tbPls
+      float A[] = {1, 1, 1, 1, 0.7, 0.5, 0.3, 0.1};
+      gam::addSines(tbPls, A, 8); 
+      addWireBox(mMesh[4],2);    // tbPls
+    }
+    { // tb__1 
+      float A[] = {1, 0.4, 0.65, 0.3, 0.18, 0.08, 0, 0};
+      float C[] = {1, 4, 7, 11, 15, 18, 0, 0 };
+      gam::addSines(tb__1, A, C, 6);
+      for (int i = 0; i < 7; i++){
+        addWireBox(mMesh[5], scaler * A[i]*C[i], scaler * A[i+1]*C[i+1], 1 + 0.3*i);
+
+        // addSphere(mMesh[5],scaler * A[i], 16, 30); // tb__1
+      }
+    }
+    { // inharmonic partials
+      float A[] = {0.5, 0.8, 0.7, 1, 0.3, 0.4, 0.2, 0.12};
+      float C[] = {3, 4, 7, 8, 11, 12, 15, 16}; 
+      gam::addSines(tb__2, A, C, 8); // tb__2
+      for (int i = 0; i < 7; i++){
+        addWireBox(mMesh[6], scaler * A[i]*C[i], scaler * A[i+1]*C[i+1], 1 + 0.3*i);
+      }
+    }
+    { // inharmonic partials
+      float A[] = {1, 0.7, 0.45, 0.3, 0.15, 0.08, 0 , 0};
+      float C[] = {10, 27, 54, 81, 108, 135, 0, 0};
+      gam::addSines(tb__3, A, C, 6); // tb__3
+      for (int i = 0; i < 7; i++){
+        addWireBox(mMesh[7], scaler * A[i]*C[i], scaler * A[i+1]*C[i+1], 1 + 0.3*i);
+      }
+    }
+  { // harmonics 20-27
+      float A[] = {0.2, 0.4, 0.6, 1, 0.7, 0.5, 0.3, 0.1};
+      gam::addSines(tb__4, A, 8, 20); // tb__4
+      for (int i = 0; i < 7; i++){
+        addWireBox(mMesh[8], hscaler * A[i], hscaler * A[i+1], 1 + 0.3*i);
+      }
+    }
+
+    // Scale and generate normals
+    for (int i = 0; i < numb_waveform; ++i) {
+      mMesh[i].scale(0.4);
+
+      int Nv = mMesh[i].vertices().size();
+      for (int k = 0; k < Nv; ++k) {
+        mMesh[i].color(HSV(float(k) / Nv, 0.3, 1));
+      }
+
+      if (!vertexLight && mMesh[i].primitive() == Mesh::TRIANGLES) {
+        mMesh[i].decompress();
+      }
+      mMesh[i].generateNormals();
+    }
+
+
   }
 
   //
   void onProcess(AudioIOData &io) override
   {
     updateFromParameters();
-    osc_carmul_inuse = OSCcarMul*10;
-    osc_modmul_inuse = OSCmodMul*10 ;
-  
+    updateWaveform();
+
+    mVibDepth = OSCvibDepth;
+    
     mVib.freq(mVibEnv());
-    // float carBaseFreq =
-    //     getInternalParameterValue("freq") * getInternalParameterValue("carMul");
-    // float modScale =
-    //     getInternalParameterValue("freq") * getInternalParameterValue("modMul");
     float carBaseFreq =
-        getInternalParameterValue("freq") * osc_carmul_inuse;
-    float modScale =
-        getInternalParameterValue("freq") * osc_modmul_inuse;
-    float amp = getInternalParameterValue("amplitude");
+        getInternalParameterValue("freq") * getInternalParameterValue("carMul");
+    float modScale = getInternalParameterValue("freq") * getInternalParameterValue("modMul");
+    float amp = getInternalParameterValue("amplitude") * 0.01;
     while (io())
     {
       mVib.freq(mVibEnv());
@@ -124,17 +199,21 @@ public:
   {
     a += 0.29;
     b += 0.23;
-    timepose -= 0.06;
+    timepose -= 0.006;
+    int shape = getInternalParameterValue("table");
+    g.polygonMode(wireframe ? GL_LINE : GL_FILL);
+    // light.pos(0, 0, 0);
+    gl::depthTesting(true);
     g.pushMatrix();
     g.depthTesting(true);
     g.lighting(true);
     g.translate(timepose, getInternalParameterValue("freq") / 200 - 3, -4);
     g.rotate(mVib() + a, Vec3f(0, 1, 0));
-    g.rotate(mVibDepth + b, Vec3f(1));
-    float scaling = getInternalParameterValue("amplitude") / 10;
-    g.scale(scaling + osc_modmul_inuse / 10, scaling + osc_carmul_inuse / 30, scaling + mEnvFollow.value() * 5);
-    g.color(HSV(osc_modmul_inuse / 20, osc_carmul_inuse / 20, 0.5 + mEnvFollow.value()));
-    g.draw(ball);
+    g.rotate(mVib() * mVibDepth + b, Vec3f(1));
+    float scaling = getInternalParameterValue("amplitude") * 10;
+    g.scale(scaling + getInternalParameterValue("modMul") / 10, scaling + getInternalParameterValue("carMul")  / 30, scaling + mEnvFollow.value() * 5);
+    g.color(HSV(getInternalParameterValue("modMul") / 20, getInternalParameterValue("carMul")  / 20, 0.5 + mEnvFollow.value()));
+    g.draw(mMesh[shape]);
     g.popMatrix();
   }
 
@@ -142,12 +221,15 @@ public:
   {
     timepose = 10;
     updateFromParameters();
+    updateWaveform();
+
     float modFreq =
         getInternalParameterValue("freq") * getInternalParameterValue("modMul");
     mod.freq(modFreq);
 
-    mVibEnv.lengths()[0] = mDur * (1 - mVibRise);
-    mVibEnv.lengths()[1] = mDur * mVibRise;
+    mVibEnv.lengths()[0] = getInternalParameterValue("vibRise");
+    mVibEnv.lengths()[1] = getInternalParameterValue("vibRise");
+    mVibEnv.lengths()[3] = getInternalParameterValue("vibRise");
     mAmpEnv.reset();
     mVibEnv.reset();
     mModEnv.reset();
@@ -160,7 +242,7 @@ public:
   }
 
   void updateFromParameters()
-  {
+  { 
     mModEnv.levels()[0] = getInternalParameterValue("idx1");
     mModEnv.levels()[1] = getInternalParameterValue("idx2");
     mModEnv.levels()[2] = getInternalParameterValue("idx2");
@@ -174,18 +256,58 @@ public:
 
     mAmpEnv.lengths()[3] = getInternalParameterValue("releaseTime");
     mModEnv.lengths()[3] = getInternalParameterValue("releaseTime");
+
+    mModEnv.lengths()[1] = mAmpEnv.lengths()[1];
     mVibEnv.levels()[1] = getInternalParameterValue("vibRate1");
     mVibEnv.levels()[2] = getInternalParameterValue("vibRate2");
     mVibDepth = getInternalParameterValue("vibDepth");
     mVibRise = getInternalParameterValue("vibRise");
     mPan.pos(getInternalParameterValue("pan"));
+    
+    setInternalParameterValue("carMul", OSCcarMul * 0.1);
+    setInternalParameterValue("modMul", OSCmodMul * 0.1);
+    setInternalParameterValue("table", int(OSCtable));
   }
+  void updateWaveform(){
+        // Map table number to table in memory
+    switch (int(getInternalParameterValue("table"))) {
+      case 0:
+        car.source(tbSaw);
+        break;
+      case 1:
+        car.source(tbSqr);
+        break;
+      case 2:
+        car.source(tbImp);
+        break;
+      case 3:
+        car.source(tbSin);
+        break;
+      case 4:
+        car.source(tbPls);
+        break;
+      case 5:
+        car.source(tb__1);
+        break;
+      case 6:
+        car.source(tb__2);
+        break;
+      case 7:
+        car.source(tb__3);
+        break;
+      case 8:
+        car.source(tb__4);
+        break;
+    }
+  }
+
+
 };
 
 class MyApp : public App, public MIDIMessageHandler
 {
 public:
-  SynthGUIManager<FM> synthManager{"synth4Vib"};
+  SynthGUIManager<FMWT> synthManager{"synth4VibWT"};
   RtMidiIn midiIn; // MIDI input carrier
   //    ParameterMIDI parameterMIDI;
   int midiNote;
@@ -193,13 +315,12 @@ public:
   float mVibDepth;
   float tscale = 1;
   osc::Recv server;
+
   Mesh mSpectrogram;
   vector<float> spectrum;
   bool showGUI = true;
   bool showSpectro = true;
   bool navi = false;
-  // float OSCcarMul, OSCmodMul, OSCvibRate, OSCvibDepth;
-
   gam::STFT stft = gam::STFT(FFT_SIZE, FFT_SIZE / 4, 0, gam::HANN, gam::MAG_FREQ);
 
   void onInit() override
@@ -238,7 +359,7 @@ public:
     nav().pos(3, 0, 17);
 
     // // OSC comm
-    server.open(4444, "0.0.0.0", 0.05);
+    server.open(7777, "0.0.0.0", 0.05);
     server.handler(oscDomain()->handler());
     server.start();
   }
@@ -286,7 +407,7 @@ public:
       g.meshColor(); // Use the color in the mesh
       g.pushMatrix();
       g.translate(-3, -3, 0);
-      g.scale(10.0 / FFT_SIZE, 100, 1.0);
+      g.scale(10.0 / FFT_SIZE, 1000, 1.0);
       g.draw(mSpectrogram);
       g.popMatrix();
     }
@@ -296,28 +417,33 @@ public:
       imguiDraw();
     }
   }
-
   void onMessage(osc::Message &m) override
   {
     // m.print();
-    if (m.addressPattern() == string("/osc/slider1"))
+    if (m.addressPattern() == string("/car"))
     {
       m >> OSCcarMul;
     }
-    else if (m.addressPattern() == string("/osc/slider2"))
+    else if (m.addressPattern() == string("/mod"))
     {
       m >> OSCmodMul;
     }
-    else if (m.addressPattern() == string("/osc/slider3"))
+    else if (m.addressPattern() == string("/vib"))
     {
       m >> OSCvibRate;
     }
-    else if (m.addressPattern() == string("/osc/slider4"))
+    else if (m.addressPattern() == string("/vibDepth"))
     {
       m >> OSCvibDepth;
     }
+    else if (m.addressPattern() == string("/table"))
+    {
+      m >> OSCtable;
+    }
+    else{
+      m.print();
+    }
   }
-
   void onMIDIMessage(const MIDIMessage &m)
   {
     switch (m.type())
@@ -366,7 +492,7 @@ public:
       else
       {
         // Otherwise trigger note for polyphonic synth
-        int midiNote = asciiToMIDI(k.key());
+        int midiNote = asciiToMIDI(k.key()) - 24;
         if (midiNote > 0)
         {
           synthManager.voice()->setInternalParameterValue(
@@ -398,7 +524,7 @@ public:
 
   bool onKeyUp(Keyboard const &k) override
   {
-    int midiNote = asciiToMIDI(k.key());
+    int midiNote = asciiToMIDI(k.key()) - 24;
     if (midiNote > 0)
     {
       synthManager.triggerOff(midiNote);

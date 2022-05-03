@@ -56,6 +56,7 @@ public:
   Vec3f scene_min, scene_max, scene_center;
   Texture tex;
   vector<Mesh> mMesh;
+  Material mtrl_duck;
   float a = 0.f; // current rotation angle
   bool wireframe = false;
   bool vertexLight = false;
@@ -82,6 +83,8 @@ public:
     {
       ascene->mesh(i, mMesh[i]);
     }
+    mtrl_duck.specular(HSV(0.16, 1, 1));
+    mtrl_duck.shininess(300);
 
     mAmpEnv.levels(0, 1, 1, 0);
     //    mAmpEnv.sustainPoint(1);
@@ -148,8 +151,6 @@ public:
     // g.rotate(b_rotate, Vec3f(1));
 
     gl::depthTesting(true);
-    g.lighting(true);
-    // g.light().dir(1.f, 1.f, 2.f);
     g.pushMatrix();
     g.translate(radius * sin(timepose) + 2, radius * cos(timepose), -5*log(-8*timepose)+ pan);
     // Rotate
@@ -163,19 +164,17 @@ public:
     tmp = 2.f / tmp;
     g.scale(tmp);
     // center the model
-    g.color(HSV(mOsc.freq() * getInternalParameterValue("amRatio") / 1000 + mAM() * 0.01, 0.5 + mAmpEnv() * 0.5, 0.05 + 5 * mAmpEnv()));
-
+    // g.color(HSV(mOsc.freq() * getInternalParameterValue("amRatio") / 10000 + mAM() * 0.01, 0.5 + mAmpEnv() * 0.5, 0.05 + 5 * mAmpEnv()));
+    g.tint(HSV(mOsc.freq() * getInternalParameterValue("amRatio") / 10000 + mAM() * 0.01, 0.5 + mAmpEnv() * 0.5, 0.85 + 5 * mAmpEnv()));
+    g.material(mtrl_duck);
     //    tex.bind(0);
     //    g.texture(); // use texture to color the mesh
     // draw all the meshes in the scene
-
     for (auto &m : mMesh)
     {
       g.draw(m);
     }
-
     //    tex.unbind(0);
-
     g.popMatrix();
   }
 
@@ -239,7 +238,7 @@ public:
   Mesh mSpectrogram;
   vector<float> spectrum;
   bool showGUI = true;
-  bool showSpectro = true;
+  bool showSpectro = false;
   bool navi = false;
   gam::STFT stft = gam::STFT(FFT_SIZE, FFT_SIZE / 4, 0, gam::HANN, gam::MAG_FREQ);
   static const int Nx = 256, Ny = Nx;
@@ -305,9 +304,9 @@ public:
 
     nav().pullBack(4);
 
-    light.dir(1, 1, 1);
+    light.dir(0, 0, 1);
     mtrl.specular(RGB(253, 184, 19));
-    mtrl.shininess(1000);
+    mtrl.shininess(300);
   }
   int indexAt(int x, int y, int z) {
     // return (z*Nx + y)*Ny + x;
@@ -426,9 +425,9 @@ public:
     g.light(light);
     g.pushMatrix();
     g.translate(2, 0, -26);
-    g.tint(HSV(0.65, 0.70, 0.44));
     g.material(mtrl);
     g.scale(30,30,100);
+    g.tint(HSV(0.65, 0.70, 0.44));
     g.draw(mesh);
     g.popMatrix();
     // GUI is drawn here
@@ -452,12 +451,11 @@ public:
         synthManager.voice()->setInternalParameterValue(
             "attackTime", 1 / m.velocity());
         synthManager.triggerOn(midiNote);
-        printf("On Note %u, Vel %f", m.noteNumber(), m.velocity());
+        drop_trigger = true;
       }
       else
       {
         synthManager.triggerOff(midiNote);
-        printf("Off Note %u, Vel %f", m.noteNumber(), m.velocity());
       }
       break;
     }

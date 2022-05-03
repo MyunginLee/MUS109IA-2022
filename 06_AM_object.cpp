@@ -1,6 +1,6 @@
 // MUS109IA & MAT276IA.
 // Spring 2022
-// Course Instrument 06. FM Vib-Visual (Object & Spectrum)
+// Course Instrument 06. AM Vib-Visual (Object & Spectrum)
 // Press '[' or ']' to turn on & off GUI
 // Able to play with MIDI device
 // Myungin Lee

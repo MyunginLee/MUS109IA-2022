@@ -115,7 +115,7 @@ public:
             float wet1, wet2;
             reverb(s1, wet1, wet2);
 
-            mPan(s1, wet1, wet2);
+            mPan(wet1, wet1, wet2);
             io.out(0) += wet1;
             io.out(1) += wet2;
         }

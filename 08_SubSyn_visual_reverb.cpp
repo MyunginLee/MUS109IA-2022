@@ -69,7 +69,7 @@ public:
         reverb.damping(0.5f);   // High-frequency damping, in [0,1]
         reverb.decay(0.6f);     // Tail decay factor, in [0,1]
         reverb.diffusion(0.76, 0.666, 0.707, 0.571);
-    
+
         createInternalTriggerParameter("amplitude", 0.3, 0.0, 1.0);
         createInternalTriggerParameter("frequency", 60, 20, 5000);
         createInternalTriggerParameter("attackTime", 0.1, 0.01, 3.0);
@@ -86,7 +86,10 @@ public:
         createInternalTriggerParameter("bwRise", 0.5, 0.1, 2);
         createInternalTriggerParameter("hmnum", 12.0, 5.0, 20.0);
         createInternalTriggerParameter("hmamp", 1.0, 0.0, 1.0);
-        createInternalTriggerParameter("pan", 0.0, -1.0, 1.0);
+        createInternalTriggerParameter("RVerb_bw", 0.6, 0.0, 1.0);
+        createInternalTriggerParameter("damp", 0.5, 0.0, 1.0);
+        createInternalTriggerParameter("decay", 0.6, 0.0, 1.0);
+        createInternalTriggerParameter("diffusion", 0.7, 0.0, 1.0);
     }
 
     //
@@ -191,6 +194,13 @@ public:
 
         mCFEnv.totalLength(getInternalParameterValue("envDur"));
         mBWEnv.totalLength(getInternalParameterValue("envDur"));
+        reverb.bandwidth(getInternalParameterValue("RVerb_bw")); // Low-pass amount on input, in [0,1]
+        reverb.damping(getInternalParameterValue("damp"));   // High-frequency damping, in [0,1]
+        reverb.decay(getInternalParameterValue("decay"));     // Tail decay factor, in [0,1]
+        reverb.diffusion(getInternalParameterValue("diffusion"), 
+                getInternalParameterValue("diffusion"),
+                getInternalParameterValue("diffusion"), 
+                getInternalParameterValue("diffusion"));
     }
 };
 

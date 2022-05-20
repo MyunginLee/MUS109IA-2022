@@ -6,6 +6,8 @@
 // Press '[' or ']' to turn on & off GUI
 // '=' to navigate pov
 // Able to play with MIDI device
+// To change the default instrument, change <FMWT> in line 42 to .. 
+// <SineEnv>, <OscEnv>, <Vib>, <FM>, <OscAM>, <OscTrm>, <AddSyn>, <Sub>, or <PluckedString>
 
 #include <cstdio> // for printing to stdout
 
@@ -35,6 +37,8 @@ using namespace std;
 class MyApp : public App, public MIDIMessageHandler
 {
 public:
+  // To change the default instrument, change <FMWT> to .. 
+  // <SineEnv>, <OscEnv>, <Vib>, <FM>, <OscAM>, <OscTrm>, <AddSyn>, <Sub>, or <PluckedString>
   SynthGUIManager<FMWT> synthManager{"Integrated"};
   //    ParameterMIDI parameterMIDI;
   int midiNote;
@@ -88,7 +92,7 @@ public:
         synthManager.synth().registerSynthClass<OscEnv>();
         synthManager.synth().registerSynthClass<Vib>();
         synthManager.synth().registerSynthClass<FM>();
-        // synthManager.synth().registerSynthClass<FMWT>();
+        synthManager.synth().registerSynthClass<FMWT>();
         synthManager.synth().registerSynthClass<OscAM>();
        synthManager.synth().registerSynthClass<OscTrm>();
         synthManager.synth().registerSynthClass<AddSyn>();
@@ -161,7 +165,7 @@ public:
       if (midiNote > 0 && m.velocity() > 0.001)
       {
         synthManager.voice()->setInternalParameterValue(
-            "freq", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
+            "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
         synthManager.voice()->setInternalParameterValue(
             "attackTime", 0.01 / m.velocity());
         synthManager.triggerOn(midiNote);

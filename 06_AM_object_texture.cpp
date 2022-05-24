@@ -1,6 +1,6 @@
 // MUS109IA & MAT276IA.
 // Spring 2022
-// Course Instrument 06. AM Vib-Visual (Object & Spectrum)
+// Course Instrument 06. AM Vib-Visual (Object with texture & Spectrum)
 // Press '[' or ']' to turn on & off GUI
 // Able to play with MIDI device
 // MacOS may require manual installation of assets3D. 
@@ -24,8 +24,8 @@
 #include "al/ui/al_Parameter.hpp"
 #include "al/math/al_Random.hpp"
 
-#include "al_ext/assets3d/al_Asset.hpp" // MacOS may require manual installation of assets3D. 
-#include "al/graphics/al_Image.hpp" // Texture io
+#include "al_ext/assets3d/al_Asset.hpp" 
+#include "al/graphics/al_Image.hpp" // Required to add Texture !!
 
 #include <algorithm> // max
 #include <cstdint>   // uint8_t
@@ -65,11 +65,11 @@ public:
   double b_rotate = 0;
   double timepose = 0;
   Vec3f spinner;
-  Texture tex;
+  Texture tex; // Texture for the mesh!!
   // Load a .jpg file
-  const char *filename = "../obj/color.jpg";
+  const char *filename = "../obj/comet.jpg"; 
   Image imageData = Image(filename);
-  
+
   // Initialize voice. This function will nly be called once per voice
   virtual void init() override
   {
@@ -173,26 +173,20 @@ public:
     g.scale(tmp);
     // center the model
     g.color(HSV(mOsc.freq() * getInternalParameterValue("amRatio") / 1000 + mAM() * 0.01, 0.5 + mAmpEnv() * 0.5, 0.05 + 5 * mAmpEnv()));
-
-    //    tex.bind(0);
-       g.texture(); // use texture to color the mesh
+    g.texture(); // use texture 
     // draw all the meshes in the scene
-    // g.texture(); // use texture to color the mesh
-
     for (auto &m : mMesh)
     {
       tex.bind();
       g.draw(m);
       tex.unbind();
     }
-
-    //    tex.unbind(0);
-
     g.popMatrix();
   }
 
   virtual void onTriggerOn() override
   {
+    // Create Texture when trigger's on
     tex.create2D(imageData.width(), imageData.height());
     tex.submit(imageData.array().data(), GL_RGBA, GL_UNSIGNED_BYTE);
 

@@ -59,7 +59,7 @@ public:
   // Mesh mMesh[numb_waveform];
   bool wireframe = false;
   bool vertexLight = false;
-  Texture tex; // Texture for the mesh!!
+  Texture tex[numb_waveform]; // Texture for the mesh!!
   // Load a .jpg file
   // const char *filename = "../obj/comet.jpg";
   string fileName[numb_waveform];
@@ -105,6 +105,7 @@ public:
         ascene->mesh(i, mMesh[k][i]);
       }
     }
+
     //      mAmpEnv.curve(0); // linear segments
     mAmpEnv.levels(0, 1, 1, 0);
     mModEnv.levels(0, 1, 1, 0);
@@ -240,10 +241,14 @@ public:
 
   void onProcess(Graphics &g) override
   {
+    int shape = getInternalParameterValue("table");
+    if (timepose == 10){
+      tex[shape].create2D(imageData[shape].width(), imageData[shape].height());
+      tex[shape].submit(imageData[shape].array().data(), GL_RGBA, GL_UNSIGNED_BYTE);
+    }
     a += 0.29;
     b += 0.23;
     timepose -= 0.06;
-    int shape = getInternalParameterValue("table");
     float radius = getInternalParameterValue("freq")/50;
     g.polygonMode(wireframe ? GL_LINE : GL_FILL);
     // light.pos(0, 0, 0);
@@ -268,19 +273,16 @@ public:
     // draw all the meshes in the scene
     for (auto &m : mMesh[shape])
     {
-      tex.bind();
+      tex[shape].bind();
       g.draw(m);
-      tex.unbind();
+      tex[shape].unbind();
     }
     g.popMatrix();
   }
 
   void onTriggerOn() override
   {
-    // Create Texture when trigger's on
-    int shape = getInternalParameterValue("table");
-    tex.create2D(imageData[shape].width(), imageData[shape].height());
-    tex.submit(imageData[shape].array().data(), GL_RGBA, GL_UNSIGNED_BYTE);
+
     timepose = 10;
     mAmpEnv.reset();
     mVibEnv.reset();
@@ -309,8 +311,7 @@ public:
 
     mAmpEnv.attack(getInternalParameterValue("attackTime"));
     mAmpEnv.release(getInternalParameterValue("releaseTime"));
-    mAmpEnv.sustain(getInternalParameterValue("sustain"));
-
+    mAmpEnv.sustain(getInternalParameterValue("sustain"));    
     mModEnv.lengths()[0] = getInternalParameterValue("attackTime");
     mModEnv.lengths()[3] = getInternalParameterValue("releaseTime");
 

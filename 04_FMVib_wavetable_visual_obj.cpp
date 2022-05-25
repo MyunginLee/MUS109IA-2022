@@ -21,7 +21,7 @@
 #include "al/scene/al_SynthSequencer.hpp"
 #include "al/ui/al_ControlGUI.hpp"
 #include "al/ui/al_Parameter.hpp"
-#include "al_ext/assets3d/al_Asset.hpp" 
+#include "al_ext/assets3d/al_Asset.hpp"
 #include "al/graphics/al_Image.hpp" // Required to add Texture !!
 
 // using namespace gam;
@@ -61,7 +61,7 @@ public:
   bool vertexLight = false;
   Texture tex; // Texture for the mesh!!
   // Load a .jpg file
-  // const char *filename = "../obj/comet.jpg"; 
+  // const char *filename = "../obj/comet.jpg";
   string fileName[numb_waveform];
   void init() override
   {
@@ -86,7 +86,8 @@ public:
     fileName[7] = "../obj/obj_7.obj";
     fileName[8] = "../obj/earth/Earth 2K.obj";
 
-    for (int k = 0; k<numb_waveform; k++){
+    for (int k = 0; k < numb_waveform; k++)
+    {
       string s = to_string(k);
       // std::string fileName = "../obj/bunny_small.obj";
       ascene = Scene::import(fileName[k]);
@@ -146,24 +147,25 @@ public:
     gam::addSine(tbSin);
     // addSphere(mMesh[3], 0.3, 16, 100); // tbSin
 
-// About: addSines (dst, amps, cycs, numh)
-// \param[out] dst		destination array
-// \param[in] amps		harmonic amplitudes of series, size must be numh - A[]
-// \param[in] cycs		harmonic numbers of series, size must be numh - C[]
-// \param[in] numh		total number of harmonics
+    // About: addSines (dst, amps, cycs, numh)
+    // \param[out] dst		destination array
+    // \param[in] amps		harmonic amplitudes of series, size must be numh - A[]
+    // \param[in] cycs		harmonic numbers of series, size must be numh - C[]
+    // \param[in] numh		total number of harmonics
     float scaler = 0.15;
     float hscaler = 1;
 
-    { //tbPls
+    { // tbPls
       float A[] = {1, 1, 1, 1, 0.7, 0.5, 0.3, 0.1};
-      gam::addSines(tbPls, A, 8); 
+      gam::addSines(tbPls, A, 8);
       // addWireBox(mMesh[4],2);    // tbPls
     }
-    { // tb__1 
+    { // tb__1
       float A[] = {1, 0.4, 0.65, 0.3, 0.18, 0.08, 0, 0};
-      float C[] = {1, 4, 7, 11, 15, 18, 0, 0 };
+      float C[] = {1, 4, 7, 11, 15, 18, 0, 0};
       gam::addSines(tb__1, A, C, 6);
-      for (int i = 0; i < 7; i++){
+      for (int i = 0; i < 7; i++)
+      {
         // addWireBox(mMesh[5], scaler * A[i]*C[i], scaler * A[i+1]*C[i+1], 1 + 0.3*i);
 
         // addSphere(mMesh[5],scaler * A[i], 16, 30); // tb__1
@@ -171,24 +173,27 @@ public:
     }
     { // inharmonic partials
       float A[] = {0.5, 0.8, 0.7, 1, 0.3, 0.4, 0.2, 0.12};
-      float C[] = {3, 4, 7, 8, 11, 12, 15, 16}; 
+      float C[] = {3, 4, 7, 8, 11, 12, 15, 16};
       gam::addSines(tb__2, A, C, 8); // tb__2
-      for (int i = 0; i < 7; i++){
+      for (int i = 0; i < 7; i++)
+      {
         // addWireBox(mMesh[6], scaler * A[i]*C[i], scaler * A[i+1]*C[i+1], 1 + 0.3*i);
       }
     }
     { // inharmonic partials
-      float A[] = {1, 0.7, 0.45, 0.3, 0.15, 0.08, 0 , 0};
+      float A[] = {1, 0.7, 0.45, 0.3, 0.15, 0.08, 0, 0};
       float C[] = {10, 27, 54, 81, 108, 135, 0, 0};
       gam::addSines(tb__3, A, C, 6); // tb__3
-      for (int i = 0; i < 7; i++){
+      for (int i = 0; i < 7; i++)
+      {
         // addWireBox(mMesh[7], scaler * A[i]*C[i], scaler * A[i+1]*C[i+1], 1 + 0.3*i);
       }
     }
-  { // harmonics 20-27
+    { // harmonics 20-27
       float A[] = {0.2, 0.4, 0.6, 1, 0.7, 0.5, 0.3, 0.1};
       gam::addSines(tb__4, A, 8, 20); // tb__4
-      for (int i = 0; i < 7; i++){
+      for (int i = 0; i < 7; i++)
+      {
         // addWireBox(mMesh[8], hscaler * A[i], hscaler * A[i+1], 1 + 0.3*i);
       }
     }
@@ -207,8 +212,6 @@ public:
     //   }
     //   mMesh[i].generateNormals();
     // }
-
-
   }
 
   //
@@ -260,7 +263,7 @@ public:
     float scaling = getInternalParameterValue("amplitude") * 10;
     g.scale(scaling + getInternalParameterValue("modMul") / 2, scaling + getInternalParameterValue("carMul") / 20, scaling + mEnvFollow.value() * 5);
     g.color(HSV(getInternalParameterValue("modMul") / 20, getInternalParameterValue("carMul") / 20, 0.5 + getInternalParameterValue("attackTime")));
-    g.texture(); // use texture 
+    g.texture(); // use texture
     // draw all the meshes in the scene
     for (auto &m : mMesh[shape])
     {
@@ -277,21 +280,18 @@ public:
     int shape = getInternalParameterValue("table");
     tex.create2D(imageData[shape].width(), imageData[shape].height());
     tex.submit(imageData[shape].array().data(), GL_RGBA, GL_UNSIGNED_BYTE);
-
     timepose = 10;
+    mAmpEnv.reset();
+    mVibEnv.reset();
+    mModEnv.reset();
+    mVib.phase(0);
+    mod.phase(0);
     updateFromParameters();
     updateWaveform();
 
     float modFreq =
         getInternalParameterValue("freq") * getInternalParameterValue("modMul");
     mod.freq(modFreq);
-
-    mVibEnv.lengths()[0] = getInternalParameterValue("vibRise");
-    mVibEnv.lengths()[1] = getInternalParameterValue("vibRise");
-    mVibEnv.lengths()[3] = getInternalParameterValue("vibRise");
-    mAmpEnv.reset();
-    mVibEnv.reset();
-    mModEnv.reset();
   }
   void onTriggerOff() override
   {
@@ -299,7 +299,6 @@ public:
     mModEnv.triggerRelease();
     mVibEnv.triggerRelease();
   }
-
   void updateFromParameters()
   {
     mModEnv.levels()[0] = getInternalParameterValue("idx1");
@@ -323,40 +322,40 @@ public:
     mVibRise = getInternalParameterValue("vibRise");
     mPan.pos(getInternalParameterValue("pan"));
   }
-  void updateWaveform(){
-        // Map table number to table in memory
-    switch (int(getInternalParameterValue("table"))) {
-      case 0:
-        car.source(tbSaw);
-        break;
-      case 1:
-        car.source(tbSqr);
-        break;
-      case 2:
-        car.source(tbImp);
-        break;
-      case 3:
-        car.source(tbSin);
-        break;
-      case 4:
-        car.source(tbPls);
-        break;
-      case 5:
-        car.source(tb__1);
-        break;
-      case 6:
-        car.source(tb__2);
-        break;
-      case 7:
-        car.source(tb__3);
-        break;
-      case 8:
-        car.source(tb__4);
-        break;
+  void updateWaveform()
+  {
+    // Map table number to table in memory
+    switch (int(getInternalParameterValue("table")))
+    {
+    case 0:
+      car.source(tbSaw);
+      break;
+    case 1:
+      car.source(tbSqr);
+      break;
+    case 2:
+      car.source(tbImp);
+      break;
+    case 3:
+      car.source(tbSin);
+      break;
+    case 4:
+      car.source(tbPls);
+      break;
+    case 5:
+      car.source(tb__1);
+      break;
+    case 6:
+      car.source(tb__2);
+      break;
+    case 7:
+      car.source(tb__3);
+      break;
+    case 8:
+      car.source(tb__4);
+      break;
     }
   }
-
-
 };
 
 class MyApp : public App, public MIDIMessageHandler

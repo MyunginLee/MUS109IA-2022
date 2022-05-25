@@ -244,13 +244,14 @@ public:
     b += 0.23;
     timepose -= 0.06;
     int shape = getInternalParameterValue("table");
+    float radius = getInternalParameterValue("freq")/50;
     g.polygonMode(wireframe ? GL_LINE : GL_FILL);
     // light.pos(0, 0, 0);
     gl::depthTesting(true);
     g.pushMatrix();
     g.depthTesting(true);
     g.lighting(true);
-    g.translate(timepose, getInternalParameterValue("freq") / 200 - 3, -4);
+    g.translate(radius*cos(timepose),radius*sin(timepose), -10);
     g.rotate(mVib() + a, Vec3f(0, 1, 0));
     g.rotate(mVib() * mVibDepth + b, Vec3f(1));
     // Scaling for objxxx
@@ -306,20 +307,21 @@ public:
     mModEnv.levels()[2] = getInternalParameterValue("idx2");
     mModEnv.levels()[3] = getInternalParameterValue("idx3");
 
-    mAmpEnv.levels()[1] = 1.0;
-    mAmpEnv.levels()[2] = getInternalParameterValue("sustain");
+    mAmpEnv.attack(getInternalParameterValue("attackTime"));
+    mAmpEnv.release(getInternalParameterValue("releaseTime"));
+    mAmpEnv.sustain(getInternalParameterValue("sustain"));
 
-    mAmpEnv.lengths()[0] = getInternalParameterValue("attackTime");
     mModEnv.lengths()[0] = getInternalParameterValue("attackTime");
-
-    mAmpEnv.lengths()[3] = getInternalParameterValue("releaseTime");
     mModEnv.lengths()[3] = getInternalParameterValue("releaseTime");
 
-    mModEnv.lengths()[1] = mAmpEnv.lengths()[1];
-    mVibEnv.levels()[1] = getInternalParameterValue("vibRate1");
-    mVibEnv.levels()[2] = getInternalParameterValue("vibRate2");
-    mVibDepth = getInternalParameterValue("vibDepth");
-    mVibRise = getInternalParameterValue("vibRise");
+    mVibEnv.levels(getInternalParameterValue("vibRate1"),
+                   getInternalParameterValue("vibRate2"),
+                   getInternalParameterValue("vibRate2"),
+                   getInternalParameterValue("vibRate1"));
+    mVibEnv.lengths()[0] = getInternalParameterValue("vibRise");
+    mVibEnv.lengths()[1] = getInternalParameterValue("vibRise");
+    mVibEnv.lengths()[3] = getInternalParameterValue("vibRise");
+    mVibDepth = getInternalParameterValue("vibDepth");  
     mPan.pos(getInternalParameterValue("pan"));
   }
   void updateWaveform()

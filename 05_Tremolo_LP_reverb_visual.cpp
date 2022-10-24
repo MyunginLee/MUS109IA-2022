@@ -89,8 +89,6 @@ public:
         // decay(0.85f);
         // damping(0.4f);
         // diffusion(0.76f, 0.666f, 0.707f, 0.571f);
-        texBlur.filter(Texture::LINEAR);
-        texBlur.resize(fbWidth, fbHeight);
 
         // Table & Visual meshes
         // Now We have the mesh according to the waveform
@@ -212,9 +210,6 @@ public:
         timepose -= 0.06;
         float frequency = getInternalParameterValue("frequency");
         int shape = getInternalParameterValue("table");
-        g.tint(0.9);
-        g.quadViewport(texBlur, -1.005, -1.005, 2.01, 2.01);  // Outward
-        g.tint(1);  // set tint back to 1
 
         // static Light light;
         g.polygonMode(wireframe ? GL_LINE : GL_FILL);
@@ -232,7 +227,6 @@ public:
         g.color(HSV(frequency / 1000, 0.6 + mAmpEnv() * 0.1, 0.6 + 0.5 * mAmpEnv()));
         g.draw(mMesh[shape]);
         g.popMatrix();
-        texBlur.copyFrameBuffer();
     }
 
     virtual void onTriggerOn() override

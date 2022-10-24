@@ -21,6 +21,8 @@
 #include "al/scene/al_SynthSequencer.hpp"
 #include "al/ui/al_ControlGUI.hpp"
 #include "al/ui/al_Parameter.hpp"
+#include "al/sound/al_Reverb.hpp"
+#include "al/math/al_Random.hpp"
 
 // using namespace gam;
 using namespace al;
@@ -36,6 +38,7 @@ public:
   gam::ADSR<> mModEnv;
   gam::EnvFollow<> mEnvFollow;
   gam::ADSR<> mVibEnv;
+  Reverb<float> reverb;
 
   gam::Sine<> car, mod, mVib; // carrier, modulator sine oscillators
   double a = 0;
@@ -49,6 +52,7 @@ public:
   float mVibFrq;
   float mVibDepth;
   float mVibRise;
+  bool wireframe = false;
 
   void init() override
   {
@@ -57,7 +61,8 @@ public:
     mModEnv.levels(0, 1, 1, 0);
     mVibEnv.levels(0, 1, 1, 0);
     //      mVibEnv.curve(0);
-    addSphere(ball, 1, 100, 100);
+    // addSphere(ball, 1, 100, 100);
+    addDodecahedron(ball);
     ball.decompress();
     ball.generateNormals();
 
@@ -82,6 +87,8 @@ public:
     createInternalTriggerParameter("vibDepth", 0, 0.0, 10.0);
 
     createInternalTriggerParameter("pan", 0.0, -1.0, 1.0);
+    createInternalTriggerParameter("reverberation", 0.1, 0.0, 1.0);
+    
   }
 
   //
@@ -100,11 +107,13 @@ public:
       car.freq((1 + mVib() * mVibDepth) * carBaseFreq +
                mod() * mModEnv() * modScale);
       float s1 = car() * mAmpEnv() * amp;
-      float s2;
-      mEnvFollow(s1);
-      mPan(s1, s1, s2);
-      io.out(0) += s1;
-      io.out(1) += s2;
+      float wet1, wet2;
+      reverb(s1, wet1, wet2);
+
+      mEnvFollow(wet1);
+      mPan(wet1, wet1, wet2);
+      io.out(0) += wet1;
+      io.out(1) += wet2;
     }
     if (mAmpEnv.done() && (mEnvFollow.value() < 0.001))
       free();
@@ -115,15 +124,16 @@ public:
     a += 0.29;
     b += 0.23;
     timepose -= 0.06;
+    // g.polygonMode(wireframe ? GL_LINE : GL_FILL);
     g.pushMatrix();
     g.depthTesting(true);
     g.lighting(true);
-    g.translate(timepose, getInternalParameterValue("freq") / 200 - 3, -4);
+    g.translate(al::rnd::uniform((timepose)*10), al::rnd::uniform(getInternalParameterValue("freq") / 200) - 3, -4);
     g.rotate(mVib() + a, Vec3f(0, 1, 0));
     g.rotate(mVibDepth + b, Vec3f(1));
     float scaling = getInternalParameterValue("amplitude") / 10;
-    g.scale(scaling + getInternalParameterValue("modMul") / 10, scaling + getInternalParameterValue("carMul") / 30, scaling + mEnvFollow.value() * 5);
-    g.color(HSV(getInternalParameterValue("modMul") / 20, getInternalParameterValue("carMul") / 20, 0.5 + getInternalParameterValue("attackTime")));
+    g.scale(scaling + getInternalParameterValue("modMul") * 10, scaling + getInternalParameterValue("carMul") * 10, scaling + mEnvFollow.value() * 5);
+    g.color(HSV(al::rnd::uniform(getInternalParameterValue("modMul")), al::rnd::uniform(getInternalParameterValue("carMul")), 0.4+mEnvFollow.value()* 5));
     g.draw(ball);
     g.popMatrix();
   }
@@ -141,6 +151,7 @@ public:
     mAmpEnv.reset();
     mVibEnv.reset();
     mModEnv.reset();
+    reverb.zero();
   }
   void onTriggerOff() override
   {
@@ -172,6 +183,7 @@ public:
     mVibDepth = getInternalParameterValue("vibDepth");
     mVibRise = getInternalParameterValue("vibRise");
     mPan.pos(getInternalParameterValue("pan"));
+    reverb.damping(1-getInternalParameterValue("reverberation"));     // Tail decay factor, in [0,1]
   }
 };
 

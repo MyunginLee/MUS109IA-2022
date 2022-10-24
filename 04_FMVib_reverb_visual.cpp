@@ -62,7 +62,7 @@ public:
     mVibEnv.levels(0, 1, 1, 0);
     //      mVibEnv.curve(0);
     // addSphere(ball, 1, 100, 100);
-    addDodecahedron(ball);
+    addCube(ball);
     ball.decompress();
     ball.generateNormals();
 
@@ -128,11 +128,11 @@ public:
     g.pushMatrix();
     g.depthTesting(true);
     g.lighting(true);
-    g.translate(al::rnd::uniform((timepose)*10), al::rnd::uniform(getInternalParameterValue("freq") / 200) - 3, -4);
+    g.translate(timepose, getInternalParameterValue("freq")/200 - 3, -4);
     g.rotate(mVib() + a, Vec3f(0, 1, 0));
     g.rotate(mVibDepth + b, Vec3f(1));
     float scaling = getInternalParameterValue("amplitude") / 10;
-    g.scale(scaling + getInternalParameterValue("modMul") * 10, scaling + getInternalParameterValue("carMul") * 10, scaling + mEnvFollow.value() * 5);
+    g.scale(scaling + getInternalParameterValue("modMul") * 2, scaling + getInternalParameterValue("carMul") * 5, scaling + mEnvFollow.value() * 5);
     g.color(HSV(al::rnd::uniform(getInternalParameterValue("modMul")), al::rnd::uniform(getInternalParameterValue("carMul")), 0.4+mEnvFollow.value()* 5));
     g.draw(ball);
     g.popMatrix();

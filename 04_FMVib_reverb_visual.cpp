@@ -39,6 +39,7 @@ public:
   gam::EnvFollow<> mEnvFollow;
   gam::ADSR<> mVibEnv;
   Reverb<float> reverb;
+  gam::STFT stft = gam::STFT(FFT_SIZE, FFT_SIZE / 4, 0, gam::HANN, gam::MAG_FREQ);
 
   gam::Sine<> car, mod, mVib; // carrier, modulator sine oscillators
   double a = 0;
@@ -107,8 +108,23 @@ public:
       car.freq((1 + mVib() * mVibDepth) * carBaseFreq +
                mod() * mModEnv() * modScale);
       float s1 = car() * mAmpEnv() * amp;
+			if(stft(s1)){
+			
+				// // Loop through all the bins
+				// for(unsigned k=0; k<stft.numBins(); ++k){
+				// 	// Here we simply scale the complex sample
+				// 	// stft.bin(k) *= al::rnd::uniformi(0.7, 1.3);
+				// }
+
+				// for(unsigned k= 20; k<stft.numBins() - 20; ++k){
+				// 	// Here we simply scale the complex sample
+        //   stft.bin(k) = stft.bin( int(k + 1 * al::rnd::gaussian()) );         
+				// }
+			}
+      auto f1 = stft();
+
       float wet1, wet2;
-      reverb(s1, wet1, wet2);
+      reverb(f1, wet1, wet2);
 
       mEnvFollow(wet1);
       mPan(wet1, wet1, wet2);
@@ -167,21 +183,22 @@ public:
     mModEnv.levels()[2] = getInternalParameterValue("idx2");
     mModEnv.levels()[3] = getInternalParameterValue("idx3");
 
-    mAmpEnv.levels()[1] = 1.0;
-    mAmpEnv.levels()[2] = getInternalParameterValue("sustain");
+    mAmpEnv.attack(getInternalParameterValue("attackTime"));
+    mAmpEnv.release(getInternalParameterValue("releaseTime"));
+    mAmpEnv.sustain(getInternalParameterValue("sustain"));
 
-    mAmpEnv.lengths()[0] = getInternalParameterValue("attackTime");
     mModEnv.lengths()[0] = getInternalParameterValue("attackTime");
-
-    mAmpEnv.lengths()[3] = getInternalParameterValue("releaseTime");
     mModEnv.lengths()[3] = getInternalParameterValue("releaseTime");
 
-    mAmpEnv.totalLength(getInternalParameterValue("dur"), 1);
-    mModEnv.lengths()[1] = mAmpEnv.lengths()[1];
-    mVibEnv.levels()[1] = getInternalParameterValue("vibRate1");
-    mVibEnv.levels()[2] = getInternalParameterValue("vibRate2");
+    mVibEnv.levels(getInternalParameterValue("vibRate1"),
+                   getInternalParameterValue("vibRate2"),
+                   getInternalParameterValue("vibRate2"),
+                   getInternalParameterValue("vibRate1"));
+    mVibEnv.lengths()[0] = getInternalParameterValue("vibRise");
+    mVibEnv.lengths()[1] = getInternalParameterValue("vibRise");
+    mVibEnv.lengths()[3] = getInternalParameterValue("vibRise");
     mVibDepth = getInternalParameterValue("vibDepth");
-    mVibRise = getInternalParameterValue("vibRise");
+    
     mPan.pos(getInternalParameterValue("pan"));
     reverb.damping(1-getInternalParameterValue("reverberation"));     // Tail decay factor, in [0,1]
   }

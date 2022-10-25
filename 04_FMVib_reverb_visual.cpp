@@ -157,16 +157,16 @@ public:
   void onTriggerOn() override
   {
     timepose = 10;
-    updateFromParameters();
-    float modFreq =
-        getInternalParameterValue("freq") * getInternalParameterValue("modMul");
-    mod.freq(modFreq);
-
-    mVibEnv.lengths()[0] = mDur * (1 - mVibRise);
-    mVibEnv.lengths()[1] = mDur * mVibRise;
     mAmpEnv.reset();
     mVibEnv.reset();
     mModEnv.reset();
+    mVib.phase(0);
+    mod.phase(0);
+    updateFromParameters();
+
+    float modFreq =
+        getInternalParameterValue("freq") * getInternalParameterValue("modMul");
+    mod.freq(modFreq);
     reverb.zero();
   }
   void onTriggerOff() override

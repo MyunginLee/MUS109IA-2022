@@ -58,15 +58,15 @@ public:
     {
         // Declare the size of the spectrum
         spectrum.resize(FFT_SIZE / 2 + 1);
-        // mSpectrogram.primitive(Mesh::POINTS);
-        mSpectrogram.primitive(Mesh::LINE_STRIP);
+        mSpectrogram.primitive(Mesh::POINTS);
+        // mSpectrogram.primitive(Mesh::LINE_STRIP);
         mAmpEnv.levels(0, 1, 1, 0);
         mPanEnv.curve(4);
         env.decay(0.1);
         delay.maxDelay(1. / 27.5);
         delay.delay(1. / 440.0);
-        reverb.bandwidth(0.6f); // Low-pass amount on input, in [0,1]
-        reverb.damping(0.5f);   // High-frequency damping, in [0,1]
+        reverb.bandwidth(0.9f); // Low-pass amount on input, in [0,1]
+        reverb.damping(0.3f);   // High-frequency damping, in [0,1]
         reverb.decay(0.6f);     // Tail decay factor, in [0,1]
 
         // Diffusion amounts
@@ -142,19 +142,21 @@ public:
         mSpectrogram.reset();
         // mSpectrogram.primitive(Mesh::LINE_STRIP);
 
-        for (int i = 0; i < FFT_SIZE / 2; i++)
+        for (int i = 0; i < FFT_SIZE / 4; i++)
         {
-            mSpectrogram.color(HSV(al::rnd::uniform(spectrum[i] * 700) 
+            mSpectrogram.color(HSV(al::rnd::uniform(float(0.1) , spectrum[i] * 200) 
             , 0.9+ al::rnd::uniform(200*spectrum[i])
-            , 10000*spectrum[i] ));
-            mSpectrogram.vertex(i+spectrum[i], 0.5*tanh(spectrum[i]), sin(i*0.01));
+            , 3000*spectrum[i] ));
+            mSpectrogram.vertex( i+spectrum[i], 0.5*tanh(spectrum[i]), sin(sin(i*0.01)));
         }
         g.meshColor(); // Use the color in the mesh
         g.pushMatrix();
         g.translate(0, 0, -8);
+        g.pointSize(5);
         g.rotate(a-timepose, Vec3f(1, 0, 1));
         g.rotate(a-timepose, Vec3f(0, 1, 0));
         g.rotate(b-timepose, Vec3f(0, 1, 1));
+        g.rotate(timepose, Vec3f(1, 0,0 ) );
         g.scale(10.0 / FFT_SIZE, 500, 1.0);
         g.draw(mSpectrogram);
         g.popMatrix();
